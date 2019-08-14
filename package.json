@@ -1,0 +1,10 @@
+{
+  "name": "Aviator",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "three": "^0.107.0"
+  },
+  "devDependencies": {}
+}
