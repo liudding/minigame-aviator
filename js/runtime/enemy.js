@@ -10,7 +10,7 @@ export default class Enemy {
       color: Colors.red,
       shininess: 0,
       specular: 0xffffff,
-      shading: THREE.FlatShading
+      flatShading: true
     });
     this.mesh = new THREE.Mesh(geom, mat);
     this.mesh.castShadow = true;

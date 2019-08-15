@@ -21,6 +21,14 @@ export default class Pool {
     return this[__.poolDic][name] || ( this[__.poolDic][name] = [] )
   }
 
+  prepare(name, className, count) {
+    let pool = this.getPoolBySign(name)
+
+    for (let i = 0; i < count; i ++) { 
+      pool.push(new className() )
+    }
+  }
+
   /**
    * 根据传入的对象标识符，查询对象池
    * 对象池为空创建新的类，否则从对象池中取

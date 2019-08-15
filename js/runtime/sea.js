@@ -48,7 +48,7 @@ export default class Sea  {
       color: Colors.blue,
       transparent: true,
       opacity: .8,
-      flatShading: THREE.FlatShading,
+      flatShading: true,
     });
 
     // To create an object in Three.js, we have to create a mesh 

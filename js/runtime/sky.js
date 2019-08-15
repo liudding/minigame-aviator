@@ -13,6 +13,7 @@ const BG_HEIGHT = 512
 export default class Sky  {
   constructor(ctx) {
 
+    this.clouds = []
 
     // Create an empty container
     this.mesh = new THREE.Object3D();
@@ -31,6 +32,8 @@ export default class Sky  {
     // create the clouds
     for (var i = 0; i < this.nClouds; i++) {
       var c = new Cloud();
+
+      this.clouds.push(c)
 
       // set the rotation and the position of each cloud;
       // for that we use a bit of trigonometry
@@ -65,7 +68,7 @@ export default class Sky  {
       var c = this.clouds[i];
       c.rotate();
     }
-    this.mesh.rotation.z += game.speed*deltaTime;
+    this.mesh.rotation.z += 0.001//game.speed*deltaTime;
   }
 
   update() {

@@ -17,7 +17,7 @@ export default class Pilot {
     this.angleHairs = 0;
 
     var bodyGeom = new THREE.BoxGeometry(15, 15, 15);
-    var bodyMat = new THREE.MeshPhongMaterial({ color: Colors.brown, shading: THREE.FlatShading });
+    var bodyMat = new THREE.MeshPhongMaterial({ color: Colors.brown, flatShading: true });
     var body = new THREE.Mesh(bodyGeom, bodyMat);
     body.position.set(2, -12, 0);
 

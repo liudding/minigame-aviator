@@ -1,25 +1,25 @@
+import Music from "./runtime/music";
+import DataBus from "./databus";
+import Sea from "./runtime/sea";
+import Sky from "./runtime/sky";
+import AirPlane from "./runtime/airplane";
+import Enemy from "./runtime/enemy";
+import EnemyHolder from "./runtime/enemyHolder";
+import Particle from "./runtime/particle";
+import ParticleHolder from "./runtime/particleHolder";
 
-import Music from './runtime/music'
-import DataBus from './databus'
-import Sea from './runtime/sea'
-import Sky from './runtime/sky'
-import AirPlane from './runtime/airplane'
+const WIDTH = window.innerWidth;
+const HEIGHT = window.innerHeight;
+const DevicePixelRatio = window.devicePixelRatio;
 
-const WIDTH = window.innerWidth
-const HEIGHT = window.innerHeight
-const DevicePixelRatio = window.devicePixelRatio
+import { Colors } from "./params";
 
-
-
-import {
-  Colors
-} from './params'
-
-let ctx = canvas.getContext('webgl')
-let databus = new DataBus()
+let ctx = canvas.getContext("webgl");
+let databus = new DataBus();
+let game = databus.game;
 
 // import Three from 'three'
-const THREE = require('three')
+const THREE = require("three");
 
 /**
  * 游戏主函数
@@ -27,7 +27,7 @@ const THREE = require('three')
 export default class Main {
   constructor() {
     // 维护当前requestAnimationFrame的id
-    this.aniId = 0
+    this.aniId = 0;
 
     this.raycaster = new THREE.Raycaster();
 
@@ -35,21 +35,23 @@ export default class Main {
     this.touchPos = {
       x: 0,
       y: 0
-    }
+    };
 
-    this.createScene()
+    this.createScene();
 
-    this.createLights()
+    this.createLights();
 
-    this.createSea()
+    this.createSea();
 
-    this.createSky()
+    this.createSky();
 
-    this.createPlane()
+    this.createPlane();
 
-    this.restart()
+    this.createEnemies();
 
+    this.createParticles();
 
+    this.restart();
   }
 
   createScene() {
@@ -58,7 +60,7 @@ export default class Main {
 
     // Create the scene
     let scene = new THREE.Scene();
-    this.scene = scene
+    this.scene = scene;
 
     scene.background = new THREE.Color(0xf7d9aa);
 
@@ -75,7 +77,7 @@ export default class Main {
       nearPlane,
       farPlane
     );
-    this.camera = camera
+    this.camera = camera;
 
     // Set the position of the camera
     camera.position.x = 0;
@@ -98,23 +100,22 @@ export default class Main {
 
     // Enable shadow rendering
     this.renderer.shadowMap.enabled = true;
-
   }
 
   createLights() {
-    // A hemisphere light is a gradient colored light; 
-    // the first parameter is the sky color, the second parameter is the ground color, 
+    // A hemisphere light is a gradient colored light;
+    // the first parameter is the sky color, the second parameter is the ground color,
     // the third parameter is the intensity of the light
-    let hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, .9)
+    let hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, 0.9);
 
-    // A directional light shines from a specific direction. 
-    // It acts like the sun, that means that all the rays produced are parallel. 
-    let shadowLight = new THREE.DirectionalLight(0xffffff, .9);
+    // A directional light shines from a specific direction.
+    // It acts like the sun, that means that all the rays produced are parallel.
+    let shadowLight = new THREE.DirectionalLight(0xffffff, 0.9);
 
-    // Set the direction of the light  
+    // Set the direction of the light
     shadowLight.position.set(150, 350, 350);
 
-    // Allow shadow casting 
+    // Allow shadow casting
     shadowLight.castShadow = true;
 
     // define the visible area of the projected shadow
@@ -125,7 +126,7 @@ export default class Main {
     shadowLight.shadow.camera.near = 1;
     shadowLight.shadow.camera.far = 1000;
 
-    // define the resolution of the shadow; the higher the better, 
+    // define the resolution of the shadow; the higher the better,
     // but also the more expensive and less performant
     shadowLight.shadow.mapSize.width = 2048;
     shadowLight.shadow.mapSize.height = 2048;
@@ -134,49 +135,62 @@ export default class Main {
     this.scene.add(hemisphereLight);
     this.scene.add(shadowLight);
 
-    let ambientLight = new THREE.AmbientLight(0xdc8874, .5);
+    let ambientLight = new THREE.AmbientLight(0xdc8874, 0.5);
     this.scene.add(ambientLight);
   }
 
   createSea() {
-    let sea = new Sea()
+    let sea = new Sea();
     // push it a little bit at the bottom of the scene
     sea.mesh.position.y = -WIDTH;
 
     // add the mesh of the sea to the scene
     this.scene.add(sea.mesh);
 
-    this.sea = sea
+    this.sea = sea;
   }
 
   createSky() {
-    let sky = this.sky = new Sky();
+    let sky = (this.sky = new Sky());
     sky.mesh.position.y = -600;
     this.scene.add(sky.mesh);
   }
 
   createPlane() {
-    let airplane = this.airplane = new AirPlane();
-    airplane.mesh.scale.set(.25, .25, .25);
+    let airplane = (this.airplane = new AirPlane());
+    airplane.mesh.scale.set(0.25, 0.25, 0.25);
     airplane.mesh.position.y = 100;
     airplane.mesh.position.x = -30;
     this.scene.add(airplane.mesh);
   }
 
+  createEnemies() {
+    databus.pool.prepare("enemy", Enemy, 10);
+
+    this.enemyHolder = new EnemyHolder();
+
+    this.scene.add(this.enemyHolder.mesh);
+  }
+
+  createParticles() {
+    databus.pool.prepare("particle", Particle, 10);
+
+    this.particleHolder = new ParticleHolder();
+    //ennemiesHolder.mesh.position.y = -game.seaRadius;
+    this.scene.add(this.particleHolder.mesh);
+  }
+
   restart() {
-    databus.reset()
+    databus.reset();
 
-    this.initEvent()
+    this.initEvent();
 
-    this.bindLoop = this.loop.bind(this)
+    this.bindLoop = this.loop.bind(this);
 
     // 清除上一局的动画
     window.cancelAnimationFrame(this.aniId);
 
-    this.aniId = window.requestAnimationFrame(
-      this.bindLoop,
-      canvas
-    )
+    this.aniId = window.requestAnimationFrame(this.bindLoop, canvas);
   }
 
   normalizeTouchPos(e) {
@@ -185,45 +199,59 @@ export default class Main {
     return {
       x,
       y
-    }
+    };
   }
 
   initEvent() {
-    canvas.addEventListener('touchstart', ((e) => {
-      e.preventDefault()
+    canvas.addEventListener(
+      "touchstart",
+      (e => {
+        e.preventDefault();
 
-      var intersects = this.raycaster.intersectObjects(this.airplane.mesh.children, false);
-      if (intersects.length > 0) {
-        this.airplane.touched = true
-      }
+        var intersects = this.raycaster.intersectObjects(
+          this.airplane.mesh.children,
+          false
+        );
+        if (intersects.length > 0) {
+          this.airplane.touched = true;
+        }
 
-      this.touchPos = this.normalizeTouchPos(e)
+        this.touchPos = this.normalizeTouchPos(e);
 
-      this.touch.x = this.touchPos.x
-      this.touch.y = this.touchPos.y
-      this.touch.z = 1
+        this.touch.x = this.touchPos.x;
+        this.touch.y = this.touchPos.y;
+        this.touch.z = 1;
+      }).bind(this)
+    );
 
-    }).bind(this))
+    canvas.addEventListener(
+      "touchmove",
+      (e => {
+        e.preventDefault();
 
-    canvas.addEventListener('touchmove', ((e) => {
-      e.preventDefault()
+        this.touchPos = this.normalizeTouchPos(e);
+      }).bind(this)
+    );
 
-      this.touchPos = this.normalizeTouchPos(e)
+    canvas.addEventListener(
+      "touchend",
+      (e => {
+        e.preventDefault();
 
-    }).bind(this))
+        this.airplane.touched = false;
 
-    canvas.addEventListener('touchend', ((e) => {
-      e.preventDefault()
-
-      this.airplane.touched = false
-    }).bind(this))
+        if (databus.game.status === 'waitingReplay') {
+          this.restart();
+        }
+      }).bind(this)
+    );
   }
 
   updatePlane() {
     var targetX = this.normalize(this.touchPos.x, -1, 1, -40, 40);
     var targetY = this.normalize(this.touchPos.y, -1, 1, 50, 175);
 
-    let airplane = this.airplane
+    let airplane = this.airplane;
 
     // Move the plane at each frame by adding a fraction of the remaining distance
     airplane.mesh.position.y += (targetY - airplane.mesh.position.y) * 0.1;
@@ -232,20 +260,16 @@ export default class Main {
     airplane.mesh.rotation.z = (targetY - airplane.mesh.position.y) * 0.0128;
     airplane.mesh.rotation.x = (airplane.mesh.position.y - targetY) * 0.0064;
 
-    airplane.propeller.rotation.x += 0.3;
-
-    airplane.pilot.updateHairs();
+    this.airplane.fly()
   }
 
   normalize(v, vmin, vmax, tmin, tmax) {
-
     var nv = Math.max(Math.min(v, vmax), vmin); // -1 1
     var dv = vmax - vmin;
     var pc = (nv - vmin) / dv;
     var dt = tmax - tmin;
-    var tv = tmin + (pc * dt);
+    var tv = tmin + pc * dt;
     return tv;
-
   }
 
   updateCameraFov() {
@@ -255,29 +279,52 @@ export default class Main {
 
   // 实现游戏帧循环
   loop() {
+    databus.game.frameNewTime = new Date().getTime();
+
+    databus.game.frameDeltaTime =
+      databus.game.frameNewTime - databus.game.frameOldTime;
+    databus.game.frameOldTime = databus.game.frameNewTime;
 
     this.raycaster.setFromCamera(this.touch, this.camera);
 
+    
 
-    this.sky.moveClouds()
+    if (databus.game.status === "playing") {
+      this.updatePlane();
 
-    this.sea.moveWaves();
+      if (databus.game.frameNewTime % 1000 < 30) {
+        this.enemyHolder.spawnEnemies(1);
+      }
 
-    this.updatePlane();
+      
+    } else if (databus.game.status === "gameover") {
+      this.airplane.fall();
+
+      if (this.airplane.mesh.position.y <-200){
+        // showReplay();
+        databus.game.status = "waitingReplay";
+  
+      }
+    } else if (databus.game.status === "waitingReplay") {
+
+    }
 
     // if (this.airplane.touched) {
-      this.updateCameraFov()
+    this.updateCameraFov();
     // }
 
-    // 通过摄像机和鼠标位置更新射线
+    databus.game.speed = game.baseSpeed * game.plane.speed;
 
+    // console.log(databus.game.speed)
+
+
+    this.sky.moveClouds();
+    this.sea.moveWaves();
+
+    this.enemyHolder.rotateEnemies(this.airplane, this.particleHolder);
 
     this.renderer.render(this.scene, this.camera);
 
-
-    this.aniId = window.requestAnimationFrame(
-      this.bindLoop,
-      canvas
-    )
+    this.aniId = window.requestAnimationFrame(this.bindLoop, canvas);
   }
 }
