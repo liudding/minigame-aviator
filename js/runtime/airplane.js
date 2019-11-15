@@ -1,5 +1,6 @@
 const THREE = require("three");
 import Pilot from "./pilot";
+import Smoke from "./smoke";
 import { Colors } from "../params";
 
 import DataBus from "../databus";
@@ -124,31 +125,25 @@ export default class AirPlane {
 
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
-    // this.initEvent()
   }
 
 
   fly() {
-    this.propeller.rotation.x += 0.3;
+    this.propeller.rotation.x += 0.4;
 
     this.pilot.updateHairs();
   }
 
   shutDownEngine() {
-    // this.propeller.rotation.x += 0.1;
-
     TweenMax.to(this.propeller.rotation, 2, { 
       x: Math.random() * 4,
+      ease: Power2.easeIn,
     });
-    // TweenMax.to(this.propeller.rotation, 1, { 
-    //   x: Math.random() * 2,
-    // });
-    // TweenMax.to(this.propeller.rotation, 0.5, { 
-    //   x: Math.random() * 1,
-    // });
   }
 
   fall() {
+    this.shutDownEngine()
+
     databus.game.speed *= 0.99;
     this.mesh.rotation.z +=
       (-Math.PI / 2 - this.mesh.rotation.z) *
@@ -160,12 +155,6 @@ export default class AirPlane {
 
     this.pilot.updateHairs();
 
-    this.shutDownEngine()
-
-    // if (airplane.mesh.position.y <-200){
-    //   showReplay();
-    //   game.status = "waitingReplay";
-
-    // }
+   
   }
 }

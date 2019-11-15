@@ -25,8 +25,16 @@ export default class DataBus {
       frameOldTime: new Date().getTime(),
 
       status: "playing", // over, playing
-      level: 1,
       score: 0,
+      distance: 0,
+      ratioSpeedDistance:100,
+      ratioSpeedEnergy: 3,
+
+      energy: 100,
+
+      level:1,
+      levelLastUpdate:0,
+      distanceForLevelUpdate:1000,
 
       speed: 0,
       initSpeed: 0.00035,
@@ -52,7 +60,14 @@ export default class DataBus {
       enemyValue: 10,
       enemiesSpeed: 0.6,
       enemyLastSpawn: 0,
-      distanceForEnemiesSpawn: 50
+      distanceForEnemiesSpawn: 50,
+
+
+      coinDistanceTolerance:15,
+      coinValue:3,
+      coinsSpeed:.5,
+      coinLastSpawn:0,
+      distanceForCoinsSpawn:10,
     };
 
     this.score = 0;
@@ -84,5 +99,14 @@ export default class DataBus {
 
   removeParticle(particle) {
     this.pool.recover("particle", particle);
+  }
+
+  removeCoin(coin) {
+    this.pool.recover("coin", coin);
+  }
+
+  addEnergy(energy) {
+    this.game.energy += energy;
+    this.game.energy = Math.min(this.game.energy, 100);
   }
 }

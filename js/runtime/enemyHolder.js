@@ -31,14 +31,17 @@ export default class EnemyHolder {
 
     let game = databus.game
 
+    
+
     for (var i = 0; i < nEnemies; i++) {
       var enemy = this.createEnemy();
 
-      enemy.angle = -(i * 0.1);
+      enemy.angle = -(i * 0.1) + 1;
       enemy.distance =
         game.sea.radius +
         game.planeDefaultHeight +
         (-1 + Math.random() * 2) * (game.planeAmpHeight - 20);
+
       enemy.mesh.position.y =
         - game.sea.radius + Math.sin(enemy.angle) * enemy.distance;
       enemy.mesh.position.x = Math.cos(enemy.angle) * enemy.distance;
@@ -61,6 +64,7 @@ export default class EnemyHolder {
       enemy.mesh.position.y =
         -game.sea.radius + Math.sin(enemy.angle) * enemy.distance;
       enemy.mesh.position.x = Math.cos(enemy.angle) * enemy.distance;
+      
       enemy.mesh.rotation.z += Math.random() * 0.1;
       enemy.mesh.rotation.y += Math.random() * 0.1;
 

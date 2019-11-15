@@ -9,7 +9,6 @@ import { Colors } from "../params";
 export default class ParticleHolder {
   constructor() {
     this.mesh = new THREE.Object3D();
-    this.particlesInUse = [];
   }
 
   createParticle() {

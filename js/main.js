@@ -7,6 +7,12 @@ import Enemy from "./runtime/enemy";
 import EnemyHolder from "./runtime/enemyHolder";
 import Particle from "./runtime/particle";
 import ParticleHolder from "./runtime/particleHolder";
+import Coin from "./runtime/coin";
+import CoinHolder from "./runtime/coinHolder";
+import Smoke from "./runtime/smoke";
+import GameInfo from "./runtime/gameinfo";
+import TweenMax from "./libs/TweenMax";
+import TouchControl from "./touch";
 
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
@@ -15,6 +21,7 @@ const DevicePixelRatio = window.devicePixelRatio;
 import { Colors } from "./params";
 
 let ctx = canvas.getContext("webgl");
+// let ctx2d = canvas.getContext('2d');
 let databus = new DataBus();
 let game = databus.game;
 
@@ -51,6 +58,52 @@ export default class Main {
 
     this.createParticles();
 
+    this.createCoins();
+
+    this.gameinfo = new GameInfo();
+    this.scene.add(this.gameinfo.mesh);
+    this.gameinfo.mesh.position.set(0, 200, 1);
+
+    // this.touchControl = new TouchControl(
+    //   canvas,
+    //   this.touchStart.bind(this),
+    //   this.touchMove.bind(this),
+    //   this.touchEnd.bind(this)
+    // );
+
+    this.moveDiff = { x: 0, y: 0, z: 0 };
+
+    // this.createSmoke()
+
+    // this.gameinfo = new GameInfo();
+    // this.gameinfo.mesh.position.y = 50;
+    // this.gameinfo.mesh.position.x = -30;
+    // this.mesh.add(this.gameinfo.mesh)
+
+    // var objectLoader = new THREE.ObjectLoader();
+    // objectLoader.load("./teapot.json", function (obj) {
+
+    //   this.scene.add(obj);
+
+    // });
+
+    // let modelLoader = new THREE.JSONLoader()
+    // modelLoader.load(modelURL,
+    //   function (geometry, materials) {
+    //     mesh = new THREE.Mesh(geometry, materials[0])
+    //     scene.add(mesh)
+    //     console.log('模型载入完成')
+    //   },
+    //   // onProgress 回调
+    //   function (xhr) {
+    //     console.log((xhr.loaded / xhr.total * 100) + '% 已载入')
+    //   },
+    //   // onError 回调
+    //   function (err) {
+    //     console.log('载入出错', err.target.status)
+    //   }
+    // );
+
     this.restart();
   }
 
@@ -68,7 +121,7 @@ export default class Main {
 
     // Create the camera
     let aspectRatio = WIDTH / HEIGHT;
-    let fieldOfView = 60;
+    let fieldOfView = 80;
     let nearPlane = 1;
     let farPlane = 10000;
     let camera = new THREE.PerspectiveCamera(
@@ -180,7 +233,21 @@ export default class Main {
     this.scene.add(this.particleHolder.mesh);
   }
 
+  createCoins() {
+    this.coinHolder = new CoinHolder(20);
+    this.scene.add(this.coinHolder.mesh);
+  }
+
+  createSmoke() {
+    this.smoke = new Smoke();
+    this.smoke.visible = false;
+    this.smoke.mesh.position.set(-30, 100, 0);
+    this.scene.add(this.smoke.mesh);
+  }
+
   restart() {
+    TweenMax.killAll();
+
     databus.reset();
 
     this.initEvent();
@@ -191,6 +258,19 @@ export default class Main {
     window.cancelAnimationFrame(this.aniId);
 
     this.aniId = window.requestAnimationFrame(this.bindLoop, canvas);
+  }
+
+  touchStart(pos) {}
+
+  touchMove(diff, curPos, startPos) {
+    //
+
+    this.moveDiff = diff;
+  }
+
+  touchEnd() {
+    this.moveDiff = { x: 0, y: 0, z: 0 };
+    // this.restart()
   }
 
   normalizeTouchPos(e) {
@@ -240,7 +320,7 @@ export default class Main {
 
         this.airplane.touched = false;
 
-        if (databus.game.status === 'waitingReplay') {
+        if (databus.game.status === "waitingReplay") {
           this.restart();
         }
       }).bind(this)
@@ -248,26 +328,47 @@ export default class Main {
   }
 
   updatePlane() {
+
+    let airplane = this.airplane;
+
+
     var targetX = this.normalize(this.touchPos.x, -1, 1, -40, 40);
     var targetY = this.normalize(this.touchPos.y, -1, 1, 50, 175);
 
-    let airplane = this.airplane;
+    // console.log(this.moveDiff.y, diff.y, this.touchPos.y, targetY, airplane.mesh.position.y)
 
     // Move the plane at each frame by adding a fraction of the remaining distance
     airplane.mesh.position.y += (targetY - airplane.mesh.position.y) * 0.1;
 
+  
     // Rotate the plane proportionally to the remaining distance
     airplane.mesh.rotation.z = (targetY - airplane.mesh.position.y) * 0.0128;
     airplane.mesh.rotation.x = (airplane.mesh.position.y - targetY) * 0.0064;
 
-    this.airplane.fly()
+
+    //  airplane.mesh.position.x += this.moveDiff.x;
+    // airplane.mesh.position.y += this.moveDiff.y * 5;
+    // airplane.mesh.position.y = this.normalize(airplane.mesh.position.y + this.moveDiff.y, -1, 1, 50, 175);;
+
+    // airplane.mesh.rotation.z = this.moveDiff.y
+    // airplane.mesh.rotation.x = this.moveDiff.y
+
+    this.airplane.fly();
   }
 
-  normalize(v, vmin, vmax, tmin, tmax) {
-    var nv = Math.max(Math.min(v, vmax), vmin); // -1 1
-    var dv = vmax - vmin;
-    var pc = (nv - vmin) / dv;
-    var dt = tmax - tmin;
+  /**
+   * 把在 vmin 和 vmax 之间的数值，标准化到 tmin 到 tmax 之间
+   * @param {*} v 
+   * @param {*} vmin 
+   * @param {*} vmax 
+   * @param {*} tmin 
+   * @param {*} tmax 
+   */
+  normalize(v, vmin, vmax, tmin, tmax) { 
+    var nv = Math.max(Math.min(v, vmax), vmin); 
+    var dv = vmax - vmin; 
+    var pc = (nv - vmin) / dv; 
+    var dt = tmax - tmin; 
     var tv = tmin + pc * dt;
     return tv;
   }
@@ -275,6 +376,45 @@ export default class Main {
   updateCameraFov() {
     this.camera.fov = this.normalize(this.touchPos.x, -1, 1, 40, 80);
     this.camera.updateProjectionMatrix();
+  }
+
+  updateDistance() {
+    databus.game.distance +=
+      databus.game.speed *
+      databus.game.frameDeltaTime *
+      databus.game.ratioSpeedDistance;
+
+    this.gameinfo.updateDistance(Math.floor(databus.game.distance));
+
+    // var d =
+    //   502 *
+    //   (1 -
+    //     (databus.game.distance % databus.game.distanceForLevelUpdate) /
+    //     databus.game.distanceForLevelUpdate);
+
+    // levelCircle.setAttribute("stroke-dashoffset", d);
+  }
+
+  updateEnergy() {
+    let game = databus.game;
+
+    game.energy -= game.speed * game.frameDeltaTime * game.ratioSpeedEnergy;
+    game.energy = Math.max(0, game.energy);
+
+    // energyBar.style.right = (100 - game.energy) + "%";
+    // energyBar.style.backgroundColor = (game.energy < 50) ? "#f25346" : "#68c3c0";
+
+    this.gameinfo.updateEnergy(game.energy.toFixed(5));
+
+    // if (game.energy < 30) {
+    //   energyBar.style.animationName = "blinking";
+    // } else {
+    //   energyBar.style.animationName = "none";
+    // }
+
+    if (game.energy < 1) {
+      game.status = "gameover";
+    }
   }
 
   // 实现游戏帧循环
@@ -287,40 +427,52 @@ export default class Main {
 
     this.raycaster.setFromCamera(this.touch, this.camera);
 
-    
-
     if (databus.game.status === "playing") {
+      // Add energy coins every 100m;
+
+      if (
+        Math.floor(databus.game.distance) %
+          databus.game.distanceForCoinsSpawn ==
+          0 &&
+        Math.floor(databus.game.distance) > databus.game.coinLastSpawn
+      ) {
+        databus.game.coinLastSpawn = Math.floor(databus.game.distance);
+        this.coinHolder.spawnCoins();
+      }
+
       this.updatePlane();
+
+      this.updateDistance();
+      this.updateEnergy();
 
       if (databus.game.frameNewTime % 1000 < 30) {
         this.enemyHolder.spawnEnemies(1);
       }
-
-      
     } else if (databus.game.status === "gameover") {
       this.airplane.fall();
+      // this.smoke.puff(this.airplane)
 
-      if (this.airplane.mesh.position.y <-200){
+      this.updateDistance();
+
+      if (this.airplane.mesh.position.y < -200) {
         // showReplay();
         databus.game.status = "waitingReplay";
-  
       }
     } else if (databus.game.status === "waitingReplay") {
-
     }
 
     // if (this.airplane.touched) {
-    this.updateCameraFov();
+    // this.updateCameraFov();
     // }
 
     databus.game.speed = game.baseSpeed * game.plane.speed;
 
     // console.log(databus.game.speed)
 
-
     this.sky.moveClouds();
     this.sea.moveWaves();
 
+    this.coinHolder.rotateCoins(this.airplane, this.particleHolder);
     this.enemyHolder.rotateEnemies(this.airplane, this.particleHolder);
 
     this.renderer.render(this.scene, this.camera);
