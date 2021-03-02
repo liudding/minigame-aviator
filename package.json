@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {},
   "dependencies": {
-    "three": "^0.107.0"
+    "three": "^0.125.0"
   },
   "devDependencies": {}
 }
